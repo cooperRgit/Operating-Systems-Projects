@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "stddef.h"
 
 uint64
 sys_exit(void)
@@ -90,4 +91,29 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+//sigreturn should return 0 for now
+uint64
+sys_sigreturn(void){
+  return 0;
+}
+
+//sys_sigalarm
+uint64
+sys_sigalarm(int ticks, void(*handler)()){
+  struct proc *p = myproc();
+
+  //if handler comes up empty then there are no ticks or alarms to handle
+  if(handler == NULL){
+    p->alarm_ticks = 0;
+    p->alarm_handler = 0;
+  }
+  //otherwise we need to set the alarm interval and the handler functions so they can be ready to make calls
+  else {
+    p->alarm_ticks = ticks;
+    p->alarm_handler = handler;
+  }
+
+  return 0;
 }
