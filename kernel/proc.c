@@ -139,9 +139,6 @@ found:
     return 0;
   }
 
-  // I dont know (might not need NO IDEA)
-  memset(p->trapframe_copy, 0, PGSIZE);
-
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -173,9 +170,16 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
+
+  //This is for freeing up some stuff with the trapframe_copy
+  if(p->trapframe_copy)
+    kfree((void*)p->trapframe_copy);
+  p->trapframe_copy = 0;
+
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
+
   p->sz = 0;
   p->pid = 0;
   p->parent = 0;
