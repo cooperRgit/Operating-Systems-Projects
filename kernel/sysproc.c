@@ -97,12 +97,15 @@ sys_uptime(void)
 uint64
 sys_sigreturn(void){
   struct proc *p = myproc();
+  
+  uint64 original_a0 = p->trapframe_copy->a0; //pull a0 from the trapframe with the saved state
 
-  // this is what will restore the previous execution state
+  // this is what will restore the previous execution state (i think)
   *(p->trapframe) = *(p->trapframe_copy);
-  p->handling = 0; //clears the handling flag
 
-  return 0;
+   p->handling = 0; //reset handling flag
+
+  return original_a0;
 }
 
 //sys_sigalarm

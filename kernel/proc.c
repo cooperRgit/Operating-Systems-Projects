@@ -139,7 +139,7 @@ found:
     return 0;
   }
 
-  // I dont know
+  // I dont know (might not need NO IDEA)
   memset(p->trapframe_copy, 0, PGSIZE);
 
   // An empty user page table.
@@ -156,7 +156,7 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
-  // initalize the alarm calls
+  // initalize the alarm components
     p->alarm_ticks = 0;
     p->alarm_handler = 0;
     p->handling = 0;

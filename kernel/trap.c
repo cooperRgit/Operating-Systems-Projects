@@ -80,16 +80,18 @@ usertrap(void)
   // OS Project-1 (alarm handling timer interrupts)
   if(which_dev == 2){
    
-    if(p->alarm_ticks == 0 && !p->alarm_handler && !p->handling){
+    //THIS if statement was blocking us from doing test 2
+    // because I was doing if !p->alarm_handler (and a bunch of other bull****)
+    // finally made sense that if the handler is set to 0 then we can go ahead and run alarm
+    // once the alarm runs I set the handling flag to 1 and then dont change it back
+    // until sigreturn gets called so that way there can be no reentries
+    if(p->handling == 0){ 
 
-      p->handling = 1; // indicates that an alarm is being handled
+      p->handling = 1; //handling flag
 
       *(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe
-      
-      p->trapframe->epc = (uint64)p->alarm_handler;
-      p->trapframe->a0 = 0; //test 3, reset a0
 
-      yield(); //not too sure what this does exactly
+      p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
       
     }
   }
