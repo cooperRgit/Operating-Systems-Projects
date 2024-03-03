@@ -96,6 +96,12 @@ sys_uptime(void)
 //sigreturn should return 0 for now
 uint64
 sys_sigreturn(void){
+  struct proc *p = myproc();
+
+  // this is what will restore the previous execution state
+  *(p->trapframe) = *(p->trapframe_copy);
+  p->handling = 0; //clears the handling flag
+
   return 0;
 }
 
@@ -109,11 +115,11 @@ sys_sigalarm(int ticks, void(*handler)()){
     p->alarm_ticks = 0;
     p->alarm_handler = 0;
   }
+
   //otherwise we need to set the alarm interval and the handler functions so they can be ready to make calls
   else {
     p->alarm_ticks = ticks;
     p->alarm_handler = handler;
   }
-
   return 0;
 }

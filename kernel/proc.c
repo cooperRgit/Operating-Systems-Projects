@@ -132,6 +132,16 @@ found:
     return 0;
   }
 
+  //trapframe copy page 
+  if((p->trapframe_copy = (struct trapframe *)kalloc()) == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+
+  // I dont know
+  memset(p->trapframe_copy, 0, PGSIZE);
+
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -149,6 +159,7 @@ found:
   // initalize the alarm calls
     p->alarm_ticks = 0;
     p->alarm_handler = 0;
+    p->handling = 0;
 
   return p;
 }

@@ -79,16 +79,20 @@ usertrap(void)
   // give up the CPU if this is a timer interrupt.
   // OS Project-1 (alarm handling timer interrupts)
   if(which_dev == 2){
-    if(p->alarm_ticks > 0){
-      p->alarm_ticks--;
-    }
-    if(p->alarm_ticks == 0 && !p->alarm_handler){
+   
+    if(p->alarm_ticks == 0 && !p->alarm_handler && !p->handling){
+
+      p->handling = 1; // indicates that an alarm is being handled
+
+      *(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe
+      
       p->trapframe->epc = (uint64)p->alarm_handler;
-      p->alarm_handler = 0;
+      p->trapframe->a0 = 0; //test 3, reset a0
+
+      yield(); //not too sure what this does exactly
+      
     }
-   yield();
   }
- 
   usertrapret();
 }
 
