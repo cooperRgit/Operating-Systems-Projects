@@ -114,9 +114,6 @@ allocproc(void)
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
     if(p->state == UNUSED) {
-      // initalize the alarm calls
-      p->alarm_ticks = 0;
-      p->alarm_handler = 0;
       goto found;
     } else {
       release(&p->lock);
@@ -148,6 +145,10 @@ found:
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
+
+  // initalize the alarm calls
+    p->alarm_ticks = 0;
+    p->alarm_handler = 0;
 
   return p;
 }

@@ -20,5 +20,5 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
-#define SYS_sigalarm 22 //OS Project-1
-#define SYS_sigreturn 23 //OS Project-1
+#define SYS_sigalarm 22 // Traps Project
+#define SYS_sigreturn 23 // Traps Project

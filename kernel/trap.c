@@ -82,15 +82,13 @@ usertrap(void)
     if(p->alarm_ticks > 0){
       p->alarm_ticks--;
     }
-    if(p->alarm_ticks == 0 && p->alarm_handler != 0){
-      uint64 alarm_caller = (uint64)p->alarm_handler;
-      p->trapframe->epc = alarm_caller;
+    if(p->alarm_ticks == 0 && !p->alarm_handler){
+      p->trapframe->epc = (uint64)p->alarm_handler;
       p->alarm_handler = 0;
-
-      yield();
     }
+   yield();
   }
-
+ 
   usertrapret();
 }
 
