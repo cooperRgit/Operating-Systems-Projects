@@ -46,6 +46,7 @@ usertrap(void)
   w_stvec((uint64)kernelvec);
 
   struct proc *p = myproc();
+  struct proc *np; //child process for copying trapframe 
   
   // save user program counter.
   p->trapframe->epc = r_sepc();
@@ -89,7 +90,27 @@ usertrap(void)
 
       p->handling = 1; //handling flag
 
-      *(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe
+
+      p->trapframe_copy = p->trapframe->kalloc();
+
+      //*(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe
+      // TODO: implement a uvmcopy similar to fork's version in proc.c
+       if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
+        freeproc(np);
+        release(&np->lock);
+        return -1;
+      }
+      //kalloc for kernel allocation on a specific chunk of memory to get a deep copy of the trapframe and save it somewhere, 
+      //handy to have it in user space to keep traps straight
+    
+
+      //memmove for 
+
+      //copy current traprframe in sigalarm, write down current trapframe, then call the haadler which will scre the trapframe
+      // copy that pointer into PC in the register file
+
+      //copy saved user registers
+      *(np->trapframe) = *(p->trapframe);
 
       p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
       

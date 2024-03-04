@@ -109,5 +109,6 @@ struct proc {
   int alarm_ticks; // number of alarm ticks
   void (*alarm_handler)(); // pointer that points to the alarm handler function
   int handling; //determines if something is being handled at the moment
-  struct trapframe *trapframe_copy; // the copy of the trapframe so we can restore state
+  
+  //struct trapframe *trapframe_copy; // the copy of the trapframe so we can restore state
 };

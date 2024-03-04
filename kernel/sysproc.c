@@ -93,15 +93,18 @@ sys_uptime(void)
   return xticks;
 }
 
-//sigreturn should return 0 for now
+//sigreturn resets the handling flag and is"supposed" to return the original a0 register value
 uint64
 sys_sigreturn(void){
   struct proc *p = myproc();
   
-  uint64 original_a0 = p->trapframe_copy->a0; //pull a0 from the trapframe with the saved state
+  uint64 original_a0 = p->trapframe->a0; //pull a0 from the trapframe with the saved state
 
   // this is what will restore the previous execution state (i think)
-  *(p->trapframe) = *(p->trapframe_copy);
+  //*(p->trapframe) = *(p->trapframe_copy);
+  //TODO: uvmcopy goes here that mimics fork's version as well as trap.c version in usertrap()
+
+  //push the copy into the kernel that only gets used whenever it is needed
 
    p->handling = 0; //reset handling flag
 
