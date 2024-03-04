@@ -316,11 +316,19 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
+    // I go into the PTE and I take the complement of PTE_W which flips all the bits and then I use a bitwise AND to clear the flag from the page table entry
+    // arbitrary example: 
+    /*
+       PTE_W -> 0000000000000010           *pte -> 1010101010101010 
+
+      ~PTE_W -> 1111111111111101           *pte &= ~PTE_W -> 1010101010101010 & 1111111111111101 = 1010101010101000 (effectively removing the write flag)
+    */
+    *pte &= ~PTE_W; // Remove the PTE_W flag from the page table entries so that they are read-only
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
       goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
+    memmove(mem, (char*)pa, PGSIZE); //copies the content of the page's physical address and puts them into the newly allocated mem
+    if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){ //changed (uint64)mem to (uint64)pa because we want to map the physical pages from the parent
       kfree(mem);
       goto err;
     }
