@@ -93,39 +93,35 @@ sys_uptime(void)
   return xticks;
 }
 
-//sigreturn resets the handling flag and is"supposed" to return the original a0 register value
+//sigreturn resets the handling flag and is "supposed" to return the original a0 register value
 uint64
-sys_sigreturn(void){
+sys_sigreturn(void) {
   struct proc *p = myproc();
-  
-  uint64 original_a0 = p->trapframe->a0; //pull a0 from the trapframe with the saved state
 
-  // this is what will restore the previous execution state (i think)
-  //*(p->trapframe) = *(p->trapframe_copy);
-  //TODO: uvmcopy goes here that mimics fork's version as well as trap.c version in usertrap()
+  if (p->trapframe_copy != 0) {
+      // Restore the original trapframe
+      memmove(p->trapframe, p->trapframe_copy, sizeof(struct trapframe));
 
-  //push the copy into the kernel that only gets used whenever it is needed
+      // Free the memory for tf_copy
+      kfree((char*)p->trapframe_copy);
+      p->trapframe_copy = 0;
+  }
 
-   p->handling = 0; //reset handling flag
+  // Reset handling flag
+  p->handling = 0;
 
-  return original_a0;
+  // Return value of a0 from the original trapframe
+  return p->trapframe->a0;
 }
+
 
 //sys_sigalarm
 uint64
 sys_sigalarm(int ticks, void(*handler)()){
   struct proc *p = myproc();
 
-  //if handler comes up empty then there are no ticks or alarms to handle
-  if(handler == NULL){
-    p->alarm_ticks = 0;
-    p->alarm_handler = 0;
-  }
+  p->alarm_ticks = ticks;
+  p->alarm_handler = handler;
 
-  //otherwise we need to set the alarm interval and the handler functions so they can be ready to make calls
-  else {
-    p->alarm_ticks = ticks;
-    p->alarm_handler = handler;
-  }
   return 0;
 }

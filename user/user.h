@@ -22,10 +22,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-
-// trap project
-int sigalarm(int ticks, void (*handler)());
-int sigreturn(void);
+int sigalarm(int ticks, void (*handler)()); //trap project  
+int sigreturn(void); //trap project
 
 // ulib.c
 int stat(const char*, struct stat*);

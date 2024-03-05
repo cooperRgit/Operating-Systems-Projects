@@ -45,8 +45,7 @@ usertrap(void)
   // since we're now in the kernel.
   w_stvec((uint64)kernelvec);
 
-  struct proc *p = myproc();
-  struct proc *np; //child process for copying trapframe 
+  struct proc *p = myproc(); 
   
   // save user program counter.
   p->trapframe->epc = r_sepc();
@@ -86,33 +85,19 @@ usertrap(void)
     // finally made sense that if the handler is set to 0 then we can go ahead and run alarm
     // once the alarm runs I set the handling flag to 1 and then dont change it back
     // until sigreturn gets called so that way there can be no reentries
-    if(p->handling == 0){ 
+
+    if(p->handling == 0){  //if process isn't handling a timer interrupt
+
+      //*(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe SHALLOW COPY BIG NO NO
+      // TODO: implement a uvmcopy similar to fork's version in proc.c
+
+      struct trapframe *tf_copy = kalloc(); //yank out a page 
+      memmove(tf_copy, p->trapframe, PGSIZE); //move a page from the p->trapframe into our kalloc'd tf_copy
+      p->trapframe_copy = tf_copy; //store this page into our trapframe_copy
+    
+      p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
 
       p->handling = 1; //handling flag
-
-
-      p->trapframe_copy = p->trapframe->kalloc();
-
-      //*(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe
-      // TODO: implement a uvmcopy similar to fork's version in proc.c
-       if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
-        freeproc(np);
-        release(&np->lock);
-        return -1;
-      }
-      //kalloc for kernel allocation on a specific chunk of memory to get a deep copy of the trapframe and save it somewhere, 
-      //handy to have it in user space to keep traps straight
-    
-
-      //memmove for 
-
-      //copy current traprframe in sigalarm, write down current trapframe, then call the haadler which will scre the trapframe
-      // copy that pointer into PC in the register file
-
-      //copy saved user registers
-      *(np->trapframe) = *(p->trapframe);
-
-      p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
       
     }
   }
