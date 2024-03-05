@@ -67,6 +67,25 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+    // give up the CPU if this is a timer interrupt.
+    // OS Project-1 (alarm handling timer interrupts)
+    if(which_dev == 2){
+    
+      // as soon as the alarm is set then we start counting ticks
+      if(p->alarm_ticks != 0){
+        p->tick_counter += 1;
+      }
+
+      if(p->alarm_ticks != 0 && (p->tick_counter % p->alarm_ticks) == 0 && p->handling == 0){ //use modular in order to keep track of when we want to do an alarm
+        
+        memmove(p->trapframe_copy, p->trapframe, PGSIZE); //move a page from the p->trapframe into our trapframe copy
+      
+        p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
+
+        p->handling = 1; //handling flag
+        
+      }
+    }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
@@ -75,33 +94,13 @@ usertrap(void)
 
   if(killed(p))
     exit(-1);
-
-  // give up the CPU if this is a timer interrupt.
-  // OS Project-1 (alarm handling timer interrupts)
+  
   if(which_dev == 2){
-   
-    //THIS if statement was blocking us from doing test 2
-    // because I was doing if !p->alarm_handler (and a bunch of other bull****)
-    // finally made sense that if the handler is set to 0 then we can go ahead and run alarm
-    // once the alarm runs I set the handling flag to 1 and then dont change it back
-    // until sigreturn gets called so that way there can be no reentries
-
-    if(p->handling == 0){  //if process isn't handling a timer interrupt
-
-      //*(p->trapframe_copy) = *(p->trapframe); //saving the state into a new trapframe SHALLOW COPY BIG NO NO
-      // TODO: implement a uvmcopy similar to fork's version in proc.c
-
-      struct trapframe *tf_copy = kalloc(); //yank out a page 
-      memmove(tf_copy, p->trapframe, PGSIZE); //move a page from the p->trapframe into our kalloc'd tf_copy
-      p->trapframe_copy = tf_copy; //store this page into our trapframe_copy
-    
-      p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
-
-      p->handling = 1; //handling flag
-      
-    }
+    yield();
   }
+
   usertrapret();
+  
 }
 
 //

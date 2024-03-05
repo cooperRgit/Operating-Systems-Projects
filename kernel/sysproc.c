@@ -98,14 +98,8 @@ uint64
 sys_sigreturn(void) {
   struct proc *p = myproc();
 
-  if (p->trapframe_copy != 0) {
-      // Restore the original trapframe
-      memmove(p->trapframe, p->trapframe_copy, sizeof(struct trapframe));
-
-      // Free the memory for tf_copy
-      kfree((char*)p->trapframe_copy);
-      p->trapframe_copy = 0;
-  }
+  //return process to the original trapframe
+  memmove(p->trapframe, p->trapframe_copy, PGSIZE); 
 
   // Reset handling flag
   p->handling = 0;
@@ -117,8 +111,14 @@ sys_sigreturn(void) {
 
 //sys_sigalarm
 uint64
-sys_sigalarm(int ticks, void(*handler)()){
+sys_sigalarm(void){
   struct proc *p = myproc();
+
+  int ticks;
+  uint64 handler;
+
+  argint(0, &ticks);
+  argaddr(1, &handler);
 
   p->alarm_ticks = ticks;
   p->alarm_handler = handler;
