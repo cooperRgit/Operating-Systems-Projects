@@ -93,12 +93,12 @@ sys_uptime(void)
   return xticks;
 }
 
-//sigreturn resets the handling flag and is "supposed" to return the original a0 register value
+//restore the original trapframe // reset the handling flag // return original a0 register
 uint64
 sys_sigreturn(void) {
   struct proc *p = myproc();
 
-  //return process to the original trapframe
+  //restore the original trapframe state (reverse of usertrap())
   memmove(p->trapframe, p->trapframe_copy, PGSIZE); 
 
   // Reset handling flag
@@ -109,18 +109,24 @@ sys_sigreturn(void) {
 }
 
 
-//sys_sigalarm
+//kernel side sigalarm system call
 uint64
 sys_sigalarm(void){
-  struct proc *p = myproc();
+  //current process
+  struct proc *p = myproc(); 
 
-  int ticks;
+  //declare the ticks and the handler
+  int ticks; 
   uint64 handler;
 
+  //pass in ticks as the first argument from user side
   argint(0, &ticks);
+  //pass in the handler as the second argument from user side
   argaddr(1, &handler);
 
+  //set the process's alarm tick count to the ticks passed in as the argument
   p->alarm_ticks = ticks;
+  //set the process's handler to be the handler provided from user side
   p->alarm_handler = handler;
 
   return 0;

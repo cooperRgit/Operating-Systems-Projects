@@ -66,23 +66,38 @@ usertrap(void)
 
     syscall();
   } else if((which_dev = devintr()) != 0){
-    // ok
-    // give up the CPU if this is a timer interrupt.
-    // OS Project-1 (alarm handling timer interrupts)
+    // device interrupts get executed below
+    
+    // checks if the interrupt was a timer interrupt
     if(which_dev == 2){
     
-      // as soon as the alarm is set then we start counting ticks
-      if(p->alarm_ticks != 0){
-        p->tick_counter += 1;
+      // if p->alarm_ticks is not zero then an alarm has been set
+      if(p->alarm_ticks != 0){ 
+        // increment tick_counter to keep track of ticks since the alarm was set
+        p->tick_counter += 1; 
       }
 
-      if(p->alarm_ticks != 0 && (p->tick_counter % p->alarm_ticks) == 0 && p->handling == 0){ //use modular in order to keep track of when we want to do an alarm
-        
-        memmove(p->trapframe_copy, p->trapframe, PGSIZE); //move a page from the p->trapframe into our trapframe copy
-      
-        p->trapframe->epc = (uint64)p->alarm_handler; //set the PC to the address of the alarm handler
+      /*
+        This if statement was the crucible that annihilated our kernel in usertests -q
+        We tried A LOT of different if statements to simply pass the alarm tests and
+        landed on one that did in fact work for the alarmtest but in doing so, anytime
+        there was a timer interrupt for ANY process it would execute the code below (I think)
+        if(p->handling == 0)
+      */
 
-        p->handling = 1; //handling flag
+      // check to see if alarm has been set
+      // check if the number of ticks that have passed is evenly divisible by the interval of the alarm ticks
+      // check if there is currently an alarm being handled
+      if(p->alarm_ticks != 0 && (p->tick_counter % p->alarm_ticks) == 0 && p->handling == 0){
+        
+        //move a page from the p->trapframe into our trapframe copy to make a DEEP COPY
+        memmove(p->trapframe_copy, p->trapframe, PGSIZE);
+      
+        //set the PC to the address of the alarm handler
+        p->trapframe->epc = (uint64)p->alarm_handler; 
+
+        //handling flag
+        p->handling = 1; 
         
       }
     }
@@ -95,6 +110,7 @@ usertrap(void)
   if(killed(p))
     exit(-1);
   
+  // give up the CPU if this is a timer interrupt.
   if(which_dev == 2){
     yield();
   }
